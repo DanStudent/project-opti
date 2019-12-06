@@ -20,7 +20,9 @@ public class Main {
                 parsedNumber += str.charAt(i);
                 i++;
             }
-            fifo.add(Integer.parseInt(parsedNumber));
+            if(!parsedNumber.equals("")){
+                fifo.add(Integer.parseInt(parsedNumber));
+            }
             i++;
         }
         int[] tab = new int[fifo.size()];
@@ -79,12 +81,12 @@ public class Main {
             for (int i = 0; i < set.size(); i++) {
                 for (int j = 0; j < set.size(); j++) {
                     double numerator = (density(set.get(i)) * density(set.get(j)));
-                    double secondTerm = numerator / edges;
+                    double secondTerm = numerator / (2*edges);
                     res += (adjMat[sommet(set.get(i))][sommet(set.get(j))] - secondTerm);
                 }
             }
         }
-        return res / edges;
+        return res / (2*edges);
     }
 
     static int sommet(int x) {
@@ -275,31 +277,14 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        parse("File4.txt");
+        parse("File5.txt");
         adjMat = create_adjMatrix(head, succ);
         display2d(adjMat);
-        /*ArrayList<ArrayList<Integer>> sets = new ArrayList<>();
-        ArrayList<Integer> firstrow = new ArrayList<>();
-        ArrayList<Integer> secondrow = new ArrayList<>();
-        firstrow.add(1);
-        firstrow.add(2);
-        firstrow.add(3);
-        secondrow.add(4);
-        secondrow.add(5);
-        secondrow.add(6);
-        sets.add(firstrow);
-        sets.add(secondrow);*/
-        //System.out.println(modularity(sets));
-        // int candidates[] = new int[]{1, 2, 3, 4, 5, 6};
-        //Cost cost = evaluate_costs(candidates, new ArrayList<ArrayList<Integer>>());
-        //display(cost.cost);
-         ArrayList<ArrayList<Integer>> solution = greedy_randomized_construction(1);
-        System.out.println(solution);
-         //if (!feasability(solution)){
-           //  System.out.println("before : "+ solution);
-        //     repair_solution(solution);
-         //}
-        System.out.println(feasability(solution));
+        ArrayList<ArrayList<Integer>> solution = greedy_randomized_construction(1);
+         if (!feasability(solution)){
+             System.out.println("before : "+ solution);
+             repair_solution(solution);
+         }
          System.out.println(solution);
          System.out.println(modularity(solution));
 
