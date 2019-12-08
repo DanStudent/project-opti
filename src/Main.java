@@ -5,7 +5,7 @@ import java.util.LinkedList;
 import java.util.Random;
 
 public class Main {
-    static int[] create_tab_from_string(String str) {
+    static int[] createTabFromString(String str) {
         LinkedList<Integer> fifo = new LinkedList<Integer>();
         int i = 0;
         while (i < str.length()) {
@@ -34,9 +34,9 @@ public class Main {
             BufferedReader bufferedReader = new BufferedReader(fileReader);
             int edges = Integer.parseInt(bufferedReader.readLine().strip());
             int vertices = Integer.parseInt(bufferedReader.readLine().strip());
-            int[] head = create_tab_from_string(bufferedReader.readLine());
-            int[] succ = create_tab_from_string(bufferedReader.readLine());
-            return new Datas(head, succ, edges, vertices, create_adjMatrix(head, succ));
+            int[] head = createTabFromString(bufferedReader.readLine());
+            int[] succ = createTabFromString(bufferedReader.readLine());
+            return new Datas(head, succ, edges, vertices, createAdjMatrix(head, succ));
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -51,7 +51,7 @@ public class Main {
         return head[sommet(x) + 1] - head[sommet(x)];
     } //retourne la densité d'un sommet
 
-    static int[][] init_tab(int[] head) {
+    static int[][] initTab(int[] head) {
         int[][] adj = new int[head.length - 1][head.length - 1];
         for (int i = 0; i < adj.length; i++) {
             for (int j = 0; j < adj[i].length; j++) {
@@ -61,8 +61,8 @@ public class Main {
         return adj;
     } // permet d'initialiser une matrice contenant que des zeros
 
-    static int[][] create_adjMatrix(int[] head, int[] succ) {
-        int[][] adj = init_tab(head);
+    static int[][] createAdjMatrix(int[] head, int[] succ) {
+        int[][] adj = initTab(head);
         for (int i = 0; i < head.length - 1; i++) {
             for (int j = head[i] - 1; j < head[i + 1] - 1; j++) {
                 adj[i][succ[j] - 1] = 1;
@@ -90,7 +90,7 @@ public class Main {
         return x - 1;
     }
 
-    static Cost evaluate_costs(ArrayList<Integer> candidates, ArrayList<ArrayList<Integer>> sols, Datas datas) {
+    static Cost evaluateCosts(ArrayList<Integer> candidates, ArrayList<ArrayList<Integer>> sols, Datas datas) {
         double costs[] = new double[datas.vertices];
         ArrayList<ArrayList<Integer>> potentialSols[] = new ArrayList[datas.vertices];
 
@@ -137,28 +137,28 @@ public class Main {
 
     }
 
-    static ArrayList<ArrayList<Integer>> greedy_randomized_construction(double alpha, Datas datas) {
+    static ArrayList<ArrayList<Integer>> greedyRandomizedConstruction(double alpha, Datas datas) {
         ArrayList<ArrayList<Integer>> solution = new ArrayList<>();
         ArrayList<Integer> usedCandidates = new ArrayList<>();
-        ArrayList<Integer> candidates = init_candidates(datas.vertices, usedCandidates);
-        Cost costs = evaluate_costs(candidates, solution, datas);
+        ArrayList<Integer> candidates = initCandidates(datas.vertices, usedCandidates);
+        Cost costs = evaluateCosts(candidates, solution, datas);
         while (!candidates.isEmpty()) {
             Double[] newCosts = Arrays.stream(costs.cost).boxed().toArray(Double[]::new);
-            double c_min = getC_min(newCosts);
-            double c_max = getC_max(newCosts);
-            ArrayList<Integer> RCL = create_RCL(c_min, c_max, alpha, candidates, newCosts);
+            double c_min = getCMin(newCosts);
+            double c_max = getCMax(newCosts);
+            ArrayList<Integer> RCL = createRCL(c_min, c_max, alpha, candidates, newCosts);
             Random random = new Random();
             int candidate_chosen = RCL.get(random.nextInt(RCL.size()));
             solution = costs.sols[sommet(candidate_chosen)];
             usedCandidates.add(candidate_chosen);
-            candidates = init_candidates(datas.vertices, usedCandidates);
-            costs = evaluate_costs(candidates, solution, datas);
+            candidates = initCandidates(datas.vertices, usedCandidates);
+            costs = evaluateCosts(candidates, solution, datas);
         }
         return solution;
 
     }
 
-    static ArrayList<Integer> create_RCL(double c_min, double c_max, double alpha, ArrayList<Integer> candidates, Double[] costs) {
+    static ArrayList<Integer> createRCL(double c_min, double c_max, double alpha, ArrayList<Integer> candidates, Double[] costs) {
 
         ArrayList<Integer> RCL = new ArrayList<>();
         /*System.out.println("c_min : " + c_min);
@@ -175,7 +175,7 @@ public class Main {
         return RCL;
     }
 
-    static double getC_min(Double[] costs) {
+    static double getCMin(Double[] costs) {
         double min = Double.POSITIVE_INFINITY;
         for (int i = 0; i < costs.length; i++) {
             if (costs[i] != 0) {
@@ -187,7 +187,7 @@ public class Main {
         return min;
     }
 
-    static double getC_max(Double[] costs) {
+    static double getCMax(Double[] costs) {
         double max = Double.NEGATIVE_INFINITY;
         for (int i = 0; i < costs.length; i++) {
             if (costs[i] != 0) {
@@ -199,7 +199,7 @@ public class Main {
         return max;
     }
 
-    static ArrayList<Integer> init_candidates(int n, ArrayList<Integer> usedCandidates) {
+    static ArrayList<Integer> initCandidates(int n, ArrayList<Integer> usedCandidates) {
         ArrayList<Integer> candidates = new ArrayList<>();
         for (int i = 1; i <= n; i++) {
             if (!(usedCandidates.contains(i))) {
@@ -209,7 +209,7 @@ public class Main {
         return candidates;
     }
 
-    static boolean feasability(ArrayList<ArrayList<Integer>> sols, Datas datas) {
+    static boolean feasibility(ArrayList<ArrayList<Integer>> sols, Datas datas) {
         for (int i = 0; i < sols.size(); i++) {
             ArrayList<Integer> set = sols.get(i);
             for (int j = 0; j < set.size(); j++) {
@@ -234,7 +234,7 @@ public class Main {
         return value;
     }
 
-    static ArrayList<ArrayList<ArrayList<Integer>>> get_neighborhood(ArrayList<ArrayList<Integer>> solution, Datas datas) {
+    static ArrayList<ArrayList<ArrayList<Integer>>> getNeighborhood(ArrayList<ArrayList<Integer>> solution, Datas datas) {
         ArrayList<ArrayList<ArrayList<Integer>>> neighborhood = new ArrayList<>();
         Random random = new Random();
         int index = random.nextInt(solution.size());
@@ -246,7 +246,7 @@ public class Main {
             for (int i = 0; i < copyOfSolution.size(); i++) {
                 ArrayList<ArrayList<Integer>> neighbor = copy(copyOfSolution);
                 neighbor.get(i).add(vertice);
-                if (feasability(neighbor, datas)) {
+                if (feasibility(neighbor, datas)) {
                     neighborhood.add(neighbor);
                 }
             }
@@ -257,7 +257,7 @@ public class Main {
                     if (j != index) {
                         ArrayList<ArrayList<Integer>> neighbor = copy(solution);
                         neighbor.get(j).add(vertice);
-                        if (feasability(neighbor, datas)) {
+                        if (feasibility(neighbor, datas)) {
                             neighborhood.add(neighbor);
                         }
 
@@ -269,8 +269,8 @@ public class Main {
         return neighborhood;
     }
 
-    static ArrayList<ArrayList<Integer>> local_search(ArrayList<ArrayList<Integer>> solution, Datas datas) {
-        ArrayList<ArrayList<ArrayList<Integer>>> neighborhood = get_neighborhood(solution, datas);
+    static ArrayList<ArrayList<Integer>> localSearch(ArrayList<ArrayList<Integer>> solution, Datas datas) {
+        ArrayList<ArrayList<ArrayList<Integer>>> neighborhood = getNeighborhood(solution, datas);
         ArrayList<ArrayList<Integer>> bestSol = solution;
         double modularity = modularity(solution, datas);
         boolean solutionChanged = true;
@@ -291,9 +291,9 @@ public class Main {
         ArrayList<ArrayList<Integer>> bestSolution = null;
         for (int i = 0; i < maxIteration; i++) {
             ArrayList<ArrayList<Integer>> solution;
-            solution = greedy_randomized_construction(alpha, datas);
-            if (feasability(solution, datas)) {
-                solution = local_search(solution, datas);
+            solution = greedyRandomizedConstruction(alpha, datas);
+            if (feasibility(solution, datas)) {
+                solution = localSearch(solution, datas);
                 if (bestSolution == null) {
                     bestSolution = solution;
                 } else {
@@ -306,9 +306,26 @@ public class Main {
         return bestSolution;
     }
 
-    static void display2d(int[][] tab) {
-        System.out.println(Arrays.deepToString(tab).replace("], ", "]\n"));
-    } // affiche une matrice
+    static void output(ArrayList<ArrayList<Integer>> solution, double modularity, String filename) throws IOException {
+        FileWriter fileWriter = new FileWriter(filename);
+        BufferedWriter bw = new BufferedWriter(fileWriter);
+        bw.write(Double.toString(modularity));
+        bw.newLine();
+        bw.write(Integer.toString(solution.size()));
+        bw.newLine();
+
+        for (ArrayList<Integer> community : solution) {
+            bw.write(Integer.toString(community.size()));
+            bw.newLine();
+            String vertices = "";
+            for (int v : community) {
+                vertices += v + " ";
+            }
+            bw.write(vertices);
+            bw.newLine();
+        }
+        bw.close();
+    }
 
     public static void main(String[] args) {
         /// PLUS IL Y A DE SOMMETS, PLUS IL EST INTERESSANT DE PRENDRE UN ALPHA GRAND
@@ -321,45 +338,71 @@ public class Main {
             @Override
             public void run() {
                 ArrayList<ArrayList<Integer>> solution = grasp(0.5, 100, file1);
-                System.out.println("Thread 1 over");
-                System.out.println("La solution est : " + solution);
-                System.out.println("La modularite est de : " + modularity(solution, file1));
+//                System.out.println("Thread 1 over");
+//                System.out.println("La solution est : " + solution);
+//                System.out.println("La modularite est de : " + modularity(solution, file1));
+                try {
+                    output(solution, modularity(solution, file1), "output1.txt");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
             }
         };
         Thread thread2 = new Thread() {
             @Override
             public void run() {
                 ArrayList<ArrayList<Integer>> solution = grasp(0.5, 100, file2);
-                System.out.println("Thread 2 over");
-                System.out.println("La solution est : " + solution);
-                System.out.println("La modularite est de : " + modularity(solution, file2));
+//                System.out.println("Thread 2 over");
+//                System.out.println("La solution est : " + solution);
+//                System.out.println("La modularite est de : " + modularity(solution, file2));
+                try {
+                    output(solution, modularity(solution, file2), "output2.txt");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         };
         Thread thread3 = new Thread() {
             @Override
             public void run() {
                 ArrayList<ArrayList<Integer>> solution = grasp(0.5, 100, file3);
-                System.out.println("Thread 3 over");
-                System.out.println("La solution est : " + solution);
-                System.out.println("La modularite est de : " + modularity(solution, file3));
+//                System.out.println("Thread 3 over");
+//                System.out.println("La solution est : " + solution);
+//                System.out.println("La modularite est de : " + modularity(solution, file3));
+                try {
+                    output(solution, modularity(solution, file3), "output3.txt");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         };
         Thread thread4 = new Thread() {
             @Override
             public void run() {
                 ArrayList<ArrayList<Integer>> solution = grasp(0.5, 100, file4);
-                System.out.println("Thread 4 over");
-                System.out.println("La solution est : " + solution);
-                System.out.println("La modularite est de : " + modularity(solution, file4));
+//                System.out.println("Thread 4 over");
+//                System.out.println("La solution est : " + solution);
+//                System.out.println("La modularite est de : " + modularity(solution, file4));
+                try {
+                    output(solution, modularity(solution, file4), "output4.txt");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         };
         Thread thread5 = new Thread() {
             @Override
             public void run() {
                 ArrayList<ArrayList<Integer>> solution = grasp(1, 100, file5);
-                System.out.println("Thread 5 over");
-                System.out.println("La solution est : " + solution);
-                System.out.println("La modularite est de : " + modularity(solution, file5));
+//                System.out.println("Thread 5 over");
+//                System.out.println("La solution est : " + solution);
+//                System.out.println("La modularite est de : " + modularity(solution, file5));
+                try {
+                    output(solution, modularity(solution, file5), "output5.txt");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         };
         thread1.start();
