@@ -5,12 +5,6 @@ import java.util.LinkedList;
 import java.util.Random;
 
 public class Main {
-    static int[] head;
-    static int[] succ;
-    static int edges;
-    static int vertices;
-    static int[][] adjMat; // la matrice d'adjacence utile pour calculer la modularité
-
     static int[] create_tab_from_string(String str) {
         LinkedList<Integer> fifo = new LinkedList<Integer>();
         int i = 0;
@@ -32,25 +26,28 @@ public class Main {
         return tab;
     } // permet de creer un tableau d'entier à partir d'un string
 
-    static void parse(String filename) {
+    static Datas parse(String filename) {
         try {
             File file = new File(filename);
             String path = file.getAbsolutePath().substring(0, file.getAbsolutePath().length() - filename.length()); // permet de prendre le chemin correct du fichier
             FileReader fileReader = new FileReader(path + "src" + File.separator + filename);
             BufferedReader bufferedReader = new BufferedReader(fileReader);
-            edges = Integer.parseInt(bufferedReader.readLine().strip());
-            vertices = Integer.parseInt(bufferedReader.readLine().strip());
-            head = create_tab_from_string(bufferedReader.readLine());
-            succ = create_tab_from_string(bufferedReader.readLine());
+            int edges = Integer.parseInt(bufferedReader.readLine().strip());
+            int vertices = Integer.parseInt(bufferedReader.readLine().strip());
+            int[] head = create_tab_from_string(bufferedReader.readLine());
+            int[] succ = create_tab_from_string(bufferedReader.readLine());
+            return new Datas(head, succ, edges, vertices, create_adjMatrix(head, succ));
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+            return null;
         } catch (IOException e) {
             e.printStackTrace();
+            return null;
         }
     } // s'occupe d'extraire les informations du fichier text
 
-    static int density(int x) {
+    static int density(int x, int[] head) {
         return head[sommet(x) + 1] - head[sommet(x)];
     } //retourne la densité d'un sommet
 
@@ -74,48 +71,48 @@ public class Main {
         return adj;
     }
 
-    static double modularity(ArrayList<ArrayList<Integer>> sets) {
+    static double modularity(ArrayList<ArrayList<Integer>> sets, Datas datas) {
         double res = 0;
         for (int k = 0; k < sets.size(); k++) {
             ArrayList<Integer> set = sets.get(k);
             for (int i = 0; i < set.size(); i++) {
                 for (int j = 0; j < set.size(); j++) {
-                    double numerator = (density(set.get(i)) * density(set.get(j)));
-                    double secondTerm = numerator / (2 * edges);
-                    res += (adjMat[sommet(set.get(i))][sommet(set.get(j))] - secondTerm);
+                    double numerator = (density(set.get(i), datas.head) * density(set.get(j), datas.head));
+                    double secondTerm = numerator / (2 * datas.edges);
+                    res += (datas.adjMat[sommet(set.get(i))][sommet(set.get(j))] - secondTerm);
                 }
             }
         }
-        return res / (2 * edges);
+        return res / (2 * datas.edges);
     }
 
     static int sommet(int x) {
         return x - 1;
     }
 
-    static Cost evaluate_costs(ArrayList<Integer> candidates, ArrayList<ArrayList<Integer>> sols) {
-        double costs[] = new double[vertices];
-        ArrayList<ArrayList<Integer>> potentialSols[] = new ArrayList[vertices];
+    static Cost evaluate_costs(ArrayList<Integer> candidates, ArrayList<ArrayList<Integer>> sols, Datas datas) {
+        double costs[] = new double[datas.vertices];
+        ArrayList<ArrayList<Integer>> potentialSols[] = new ArrayList[datas.vertices];
 
         for (int vertice : candidates) {
             if (sols.isEmpty()) {
                 ArrayList<Integer> newSet = new ArrayList<>();
                 newSet.add(vertice);
                 sols.add(newSet);
-                costs[sommet(vertice)] = modularity(sols);
+                costs[sommet(vertice)] = modularity(sols, datas);
                 potentialSols[sommet(vertice)] = new ArrayList<>(sols);
                 sols.remove(0);
             } else {
                 ArrayList<Integer> newSet = new ArrayList<>();
                 newSet.add(vertice);
                 sols.add(newSet);
-                costs[sommet(vertice)] = modularity(sols);
+                costs[sommet(vertice)] = modularity(sols, datas);
                 potentialSols[sommet(vertice)] = new ArrayList<>(sols);
                 sols.remove(sols.size() - 1);
                 for (int i = 0; i < sols.size(); i++) {
                     ArrayList<Integer> set = sols.get(i);
                     set.add(vertice);
-                    double cost = modularity(sols);
+                    double cost = modularity(sols, datas);
                     if (cost > costs[sommet(vertice)]) {
                         costs[sommet(vertice)] = cost;
                         potentialSols[sommet(vertice)] = copy(sols);
@@ -140,11 +137,11 @@ public class Main {
 
     }
 
-    static ArrayList<ArrayList<Integer>> greedy_randomized_construction(double alpha) {
+    static ArrayList<ArrayList<Integer>> greedy_randomized_construction(double alpha, Datas datas) {
         ArrayList<ArrayList<Integer>> solution = new ArrayList<>();
         ArrayList<Integer> usedCandidates = new ArrayList<>();
-        ArrayList<Integer> candidates = init_candidates(vertices, usedCandidates);
-        Cost costs = evaluate_costs(candidates, solution);
+        ArrayList<Integer> candidates = init_candidates(datas.vertices, usedCandidates);
+        Cost costs = evaluate_costs(candidates, solution, datas);
         while (!candidates.isEmpty()) {
             Double[] newCosts = Arrays.stream(costs.cost).boxed().toArray(Double[]::new);
             double c_min = getC_min(newCosts);
@@ -154,8 +151,8 @@ public class Main {
             int candidate_chosen = RCL.get(random.nextInt(RCL.size()));
             solution = costs.sols[sommet(candidate_chosen)];
             usedCandidates.add(candidate_chosen);
-            candidates = init_candidates(vertices, usedCandidates);
-            costs = evaluate_costs(candidates, solution);
+            candidates = init_candidates(datas.vertices, usedCandidates);
+            costs = evaluate_costs(candidates, solution, datas);
         }
         return solution;
 
@@ -212,12 +209,12 @@ public class Main {
         return candidates;
     }
 
-    static boolean feasability(ArrayList<ArrayList<Integer>> sols) {
+    static boolean feasability(ArrayList<ArrayList<Integer>> sols, Datas datas) {
         for (int i = 0; i < sols.size(); i++) {
             ArrayList<Integer> set = sols.get(i);
             for (int j = 0; j < set.size(); j++) {
                 int vertice = set.get(j);
-                if (!linked(vertice, set)) {
+                if (!linked(vertice, set, datas)) {
                     return false;
                 }
             }
@@ -225,11 +222,11 @@ public class Main {
         return true;
     }
 
-    static boolean linked(int vertice, ArrayList<Integer> set) {
+    static boolean linked(int vertice, ArrayList<Integer> set, Datas datas) {
         boolean value = false;
         for (int sommet : set) {
             if (sommet != vertice) {
-                if (adjMat[sommet(vertice)][sommet(sommet)] == 1) {
+                if (datas.adjMat[sommet(vertice)][sommet(sommet)] == 1) {
                     value = true;
                 }
             }
@@ -237,7 +234,7 @@ public class Main {
         return value;
     }
 
-    static ArrayList<ArrayList<ArrayList<Integer>>> get_neighborhood(ArrayList<ArrayList<Integer>> solution) {
+    static ArrayList<ArrayList<ArrayList<Integer>>> get_neighborhood(ArrayList<ArrayList<Integer>> solution, Datas datas) {
         ArrayList<ArrayList<ArrayList<Integer>>> neighborhood = new ArrayList<>();
         Random random = new Random();
         int index = random.nextInt(solution.size());
@@ -249,7 +246,7 @@ public class Main {
             for (int i = 0; i < copyOfSolution.size(); i++) {
                 ArrayList<ArrayList<Integer>> neighbor = copy(copyOfSolution);
                 neighbor.get(i).add(vertice);
-                if (feasability(neighbor)) {
+                if (feasability(neighbor, datas)) {
                     neighborhood.add(neighbor);
                 }
             }
@@ -260,7 +257,7 @@ public class Main {
                     if (j != index) {
                         ArrayList<ArrayList<Integer>> neighbor = copy(solution);
                         neighbor.get(j).add(vertice);
-                        if (feasability(neighbor)) {
+                        if (feasability(neighbor, datas)) {
                             neighborhood.add(neighbor);
                         }
 
@@ -272,17 +269,17 @@ public class Main {
         return neighborhood;
     }
 
-    static ArrayList<ArrayList<Integer>> local_search(ArrayList<ArrayList<Integer>> solution) {
-        ArrayList<ArrayList<ArrayList<Integer>>> neighborhood = get_neighborhood(solution);
+    static ArrayList<ArrayList<Integer>> local_search(ArrayList<ArrayList<Integer>> solution, Datas datas) {
+        ArrayList<ArrayList<ArrayList<Integer>>> neighborhood = get_neighborhood(solution, datas);
         ArrayList<ArrayList<Integer>> bestSol = solution;
-        double modularity = modularity(solution);
+        double modularity = modularity(solution, datas);
         boolean solutionChanged = true;
         while (solutionChanged) {
             solutionChanged = false;
             for (int i = 0; i < neighborhood.size(); i++) {
-                if (modularity(neighborhood.get(i)) > modularity) {
+                if (modularity(neighborhood.get(i), datas) > modularity) {
                     bestSol = neighborhood.get(i);
-                    modularity = modularity(neighborhood.get(i));
+                    modularity = modularity(neighborhood.get(i), datas);
                     solutionChanged = true;
                 }
             }
@@ -290,17 +287,17 @@ public class Main {
         return bestSol;
     }
 
-    static ArrayList<ArrayList<Integer>> grasp(double alpha, int maxIteration) {
+    static ArrayList<ArrayList<Integer>> grasp(double alpha, int maxIteration, Datas datas) {
         ArrayList<ArrayList<Integer>> bestSolution = null;
         for (int i = 0; i < maxIteration; i++) {
             ArrayList<ArrayList<Integer>> solution;
-            solution = greedy_randomized_construction(alpha);
-            if (feasability(solution)) {
-                solution = local_search(solution);
+            solution = greedy_randomized_construction(alpha, datas);
+            if (feasability(solution, datas)) {
+                solution = local_search(solution, datas);
                 if (bestSolution == null) {
                     bestSolution = solution;
                 } else {
-                    if (modularity(solution) > modularity(bestSolution)) {
+                    if (modularity(solution, datas) > modularity(bestSolution, datas)) {
                         bestSolution = solution;
                     }
                 }
@@ -315,12 +312,60 @@ public class Main {
 
     public static void main(String[] args) {
         /// PLUS IL Y A DE SOMMETS, PLUS IL EST INTERESSANT DE PRENDRE UN ALPHA GRAND
-        parse("File5.txt");
-        adjMat = create_adjMatrix(head, succ);
-        ArrayList<ArrayList<Integer>> solution = grasp(1, 300);
-        System.out.println("La solution est : " + solution);
-        System.out.println("La modularite est de : "  + modularity(solution));
-
-
+        Datas file1 = parse("File1.txt");
+        Datas file2 = parse("File2.txt");
+        Datas file3 = parse("File3.txt");
+        Datas file4 = parse("File4.txt");
+        Datas file5 = parse("File5.txt");
+        Thread thread1 = new Thread() {
+            @Override
+            public void run() {
+                ArrayList<ArrayList<Integer>> solution = grasp(0.5, 100, file1);
+                System.out.println("Thread 1 over");
+                System.out.println("La solution est : " + solution);
+                System.out.println("La modularite est de : " + modularity(solution, file1));
+            }
+        };
+        Thread thread2 = new Thread() {
+            @Override
+            public void run() {
+                ArrayList<ArrayList<Integer>> solution = grasp(0.5, 100, file2);
+                System.out.println("Thread 2 over");
+                System.out.println("La solution est : " + solution);
+                System.out.println("La modularite est de : " + modularity(solution, file2));
+            }
+        };
+        Thread thread3 = new Thread() {
+            @Override
+            public void run() {
+                ArrayList<ArrayList<Integer>> solution = grasp(0.5, 100, file3);
+                System.out.println("Thread 3 over");
+                System.out.println("La solution est : " + solution);
+                System.out.println("La modularite est de : " + modularity(solution, file3));
+            }
+        };
+        Thread thread4 = new Thread() {
+            @Override
+            public void run() {
+                ArrayList<ArrayList<Integer>> solution = grasp(0.5, 100, file4);
+                System.out.println("Thread 4 over");
+                System.out.println("La solution est : " + solution);
+                System.out.println("La modularite est de : " + modularity(solution, file4));
+            }
+        };
+        Thread thread5 = new Thread() {
+            @Override
+            public void run() {
+                ArrayList<ArrayList<Integer>> solution = grasp(1, 100, file5);
+                System.out.println("Thread 5 over");
+                System.out.println("La solution est : " + solution);
+                System.out.println("La modularite est de : " + modularity(solution, file5));
+            }
+        };
+        thread1.start();
+        thread2.start();
+        thread3.start();
+        thread4.start();
+        thread5.start();
     }
 }
