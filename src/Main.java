@@ -20,7 +20,7 @@ public class Main {
                 parsedNumber += str.charAt(i);
                 i++;
             }
-            if(!parsedNumber.equals("")){
+            if (!parsedNumber.equals("")) {
                 fifo.add(Integer.parseInt(parsedNumber));
             }
             i++;
@@ -81,12 +81,12 @@ public class Main {
             for (int i = 0; i < set.size(); i++) {
                 for (int j = 0; j < set.size(); j++) {
                     double numerator = (density(set.get(i)) * density(set.get(j)));
-                    double secondTerm = numerator / (2*edges);
+                    double secondTerm = numerator / (2 * edges);
                     res += (adjMat[sommet(set.get(i))][sommet(set.get(j))] - secondTerm);
                 }
             }
         }
-        return res / (2*edges);
+        return res / (2 * edges);
     }
 
     static int sommet(int x) {
@@ -128,7 +128,8 @@ public class Main {
         }
         return new Cost(costs, potentialSols);
     }
-    static ArrayList<ArrayList<Integer>> copy(ArrayList<ArrayList<Integer>> a){
+
+    static ArrayList<ArrayList<Integer>> copy(ArrayList<ArrayList<Integer>> a) {
         ArrayList<ArrayList<Integer>> newArrayList = new ArrayList<>();
         for (int i = 0; i < a.size(); i++) {
             ArrayList<Integer> b = new ArrayList<>();
@@ -163,9 +164,9 @@ public class Main {
     static ArrayList<Integer> create_RCL(double c_min, double c_max, double alpha, ArrayList<Integer> candidates, Double[] costs) {
 
         ArrayList<Integer> RCL = new ArrayList<>();
-        System.out.println("c_min : "+c_min);
-        System.out.println("c_max : "+c_max);
-        System.out.println("borne inferieur : " + (c_max - alpha * (c_max - c_min)));
+        /*System.out.println("c_min : " + c_min);
+        System.out.println("c_max : " + c_max);
+        System.out.println("borne inferieur : " + (c_max - alpha * (c_max - c_min)));*/
         for (int vertices : candidates) {
             if (costs[sommet(vertices)] != 0) {
                 if (costs[sommet(vertices)] >= c_max - alpha * (c_max - c_min)) {
@@ -211,82 +212,114 @@ public class Main {
         return candidates;
     }
 
-    static boolean feasability(ArrayList<ArrayList<Integer>> sols){
+    static boolean feasability(ArrayList<ArrayList<Integer>> sols) {
         for (int i = 0; i < sols.size(); i++) {
             ArrayList<Integer> set = sols.get(i);
             for (int j = 0; j < set.size(); j++) {
                 int vertice = set.get(j);
-                if(!linked(vertice, set)){
+                if (!linked(vertice, set)) {
                     return false;
                 }
             }
         }
         return true;
     }
-    static boolean linked(int vertice, ArrayList<Integer> set){
+
+    static boolean linked(int vertice, ArrayList<Integer> set) {
         boolean value = false;
         for (int sommet : set) {
-            if(sommet!=vertice){
-                if(adjMat[sommet(vertice)][sommet(sommet)] == 1){
+            if (sommet != vertice) {
+                if (adjMat[sommet(vertice)][sommet(sommet)] == 1) {
                     value = true;
                 }
             }
         }
         return value;
     }
-    static void repair_solution(ArrayList<ArrayList<Integer>> sols){
-        for (ArrayList<Integer> set : sols) {
-            if(set.size()>1){
-                for (int i = 0; i < set.size(); i++) {
-                    int vertice = set.get(i);
-                    if(!linked(vertice, set)){
-                        set.remove(vertice);
-                        ArrayList<Integer> newSet = new ArrayList<>();
-                        newSet.add(vertice);
-                        sols.add(set);
+
+    static ArrayList<ArrayList<ArrayList<Integer>>> get_neighborhood(ArrayList<ArrayList<Integer>> solution) {
+        ArrayList<ArrayList<ArrayList<Integer>>> neighborhood = new ArrayList<>();
+        Random random = new Random();
+        int index = random.nextInt(solution.size());
+        ArrayList<Integer> set = solution.get(index);
+        if (set.size() == 1) {
+            ArrayList<ArrayList<Integer>> copyOfSolution = copy(solution);
+            int vertice = set.remove(0);
+            copyOfSolution.remove(set);
+            for (int i = 0; i < copyOfSolution.size(); i++) {
+                ArrayList<ArrayList<Integer>> neighbor = copy(copyOfSolution);
+                neighbor.get(i).add(vertice);
+                if (feasability(neighbor)) {
+                    neighborhood.add(neighbor);
+                }
+            }
+        } else {
+            for (int i = 0; i < set.size(); i++) {
+                int vertice = set.remove(i);
+                for (int j = 0; j < solution.size(); j++) {
+                    if (j != index) {
+                        ArrayList<ArrayList<Integer>> neighbor = copy(solution);
+                        neighbor.get(j).add(vertice);
+                        if (feasability(neighbor)) {
+                            neighborhood.add(neighbor);
+                        }
+
                     }
                 }
-
-
+                set.add(vertice);
             }
         }
+        return neighborhood;
     }
-    static void display(int[] tab) {
-        for (int x : tab
-        ) {
-            System.out.print(x + " ");
-        }
-        System.out.print("\n");
-    } // afficher un tableau 1d
 
-    static void display(double[] tab) {
-        for (double x : tab
-        ) {
-            System.out.print(x + " ");
+    static ArrayList<ArrayList<Integer>> local_search(ArrayList<ArrayList<Integer>> solution) {
+        ArrayList<ArrayList<ArrayList<Integer>>> neighborhood = get_neighborhood(solution);
+        ArrayList<ArrayList<Integer>> bestSol = solution;
+        double modularity = modularity(solution);
+        boolean solutionChanged = true;
+        while (solutionChanged) {
+            solutionChanged = false;
+            for (int i = 0; i < neighborhood.size(); i++) {
+                if (modularity(neighborhood.get(i)) > modularity) {
+                    bestSol = neighborhood.get(i);
+                    modularity = modularity(neighborhood.get(i));
+                    solutionChanged = true;
+                }
+            }
         }
-        System.out.print("\n");
+        return bestSol;
+    }
+
+    static ArrayList<ArrayList<Integer>> grasp(double alpha, int maxIteration) {
+        ArrayList<ArrayList<Integer>> bestSolution = null;
+        for (int i = 0; i < maxIteration; i++) {
+            ArrayList<ArrayList<Integer>> solution;
+            solution = greedy_randomized_construction(alpha);
+            if (feasability(solution)) {
+                solution = local_search(solution);
+                if (bestSolution == null) {
+                    bestSolution = solution;
+                } else {
+                    if (modularity(solution) > modularity(bestSolution)) {
+                        bestSolution = solution;
+                    }
+                }
+            }
+        }
+        return bestSolution;
     }
 
     static void display2d(int[][] tab) {
         System.out.println(Arrays.deepToString(tab).replace("], ", "]\n"));
     } // affiche une matrice
-    static void displaySolutions(ArrayList<ArrayList<Integer>>[] tab){
-        for (int i = 0; i < tab.length; i++) {
-            System.out.println(tab[i]);
-        }
-    }
 
     public static void main(String[] args) {
+        /// PLUS IL Y A DE SOMMETS, PLUS IL EST INTERESSANT DE PRENDRE UN ALPHA GRAND
         parse("File5.txt");
         adjMat = create_adjMatrix(head, succ);
-        display2d(adjMat);
-        ArrayList<ArrayList<Integer>> solution = greedy_randomized_construction(1);
-         if (!feasability(solution)){
-             System.out.println("before : "+ solution);
-             repair_solution(solution);
-         }
-         System.out.println(solution);
-         System.out.println(modularity(solution));
+        ArrayList<ArrayList<Integer>> solution = grasp(1, 300);
+        System.out.println("La solution est : " + solution);
+        System.out.println("La modularite est de : "  + modularity(solution));
 
 
     }
