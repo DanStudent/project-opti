@@ -1,0 +1,9 @@
+\beamer@sectionintoc {1}{Introduction}{3}{0}{1}
+\beamer@subsectionintoc {1}{1}{Introduction}{3}{0}{1}
+\beamer@sectionintoc {2}{GRASP}{4}{0}{2}
+\beamer@subsectionintoc {2}{1}{Greedy Randomized Construction}{4}{0}{2}
+\beamer@subsectionintoc {2}{2}{Local Search}{5}{0}{2}
+\beamer@subsectionintoc {2}{3}{Algorithme principal}{6}{0}{2}
+\beamer@sectionintoc {3}{R\IeC {\'e}sultat}{7}{0}{3}
+\beamer@sectionintoc {4}{Conclusion}{8}{0}{4}
+\beamer@sectionintoc {5}{Source}{9}{0}{5}

@@ -1,0 +1,106 @@
+\documentclass[compress]{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amssymb}
+\usepackage{hyperref}
+
+\usetheme[navigation]{UMONS}
+%\usetheme[navigation, no-subsection, no-totalframenumber]{UMONS}
+
+\newcommand{\IR}{\mathbb{R}}
+
+
+\title{Graphes et optimisation combinatoire}
+\subtitle{Projet}
+\author{Danial, Ryan, Guillaume, Laurent}
+
+\institute[(Info)]{%
+  Faculté des Sciences , section Info\\
+  Université de Mons
+  \\[2ex]
+  \includegraphics[height=4ex]{UMONS}\hspace{2em}%
+  \raisebox{-1ex}{\includegraphics[height=6ex]{UMONS_FS}}
+}
+
+\begin{document}
+
+\begin{frame}[plain]
+  \titlepage
+\end{frame}
+
+\begin{frame}
+  \tableofcontents
+\end{frame}
+
+\section{Introduction}
+\subsection{Introduction}
+\begin{frame}
+\begin{itemize}
+\item Nous avons choisit de coder notre projet en Java.
+\item Nous avons utiliser GRASP comme métaheuristique. 
+\end{itemize}
+\end{frame}
+
+\section{GRASP}
+\subsection{Greedy Randomized Construction}
+\begin{frame}
+  \frametitle{Greedy Randomized Construction}
+	
+	On commence avec une solution vide et un certain nombre de candidats (les sommets). On va ensuite évaluer le cout d'ajout de chaque candidat. Grace à cela, nous allons créer une liste de candidat restreint où intervient le parametre  $\alpha $ qui nous permettra de varier entre la diversification et intensification. On choisit un des sommets (au hasard) dans la liste que l'on ajoute à la solution. Cet algorithme se finira s'il n'y a plus de candidat.  
+\end{frame}
+
+\subsection{Local Search}
+\begin{frame}
+  \frametitle{Local Search}
+  \begin{itemize}
+  \item Mouvement \\
+  Nous avons d'abord du créer un voisinage gràce à un mouvement (on prend un ensemble au hasard dans la solution ensuite nous allons prendre chaque sommet de cet ensemble que nous allons intégrer dans les autres ensembles afin générer un nouveau voisinage (en tenant compte de la faisabilité).
+  \end{itemize}
+	Parmi les voisinages, nous allons prendre une solution meilleure. L'algorithme s'arrête quand il n'y a plus de meilleure solutions.
+\end{frame}
+
+\subsection{Algorithme principal}
+\begin{frame}
+\frametitle{Algorithme principal}
+	L'algorithme va itérer un certain nombre de fois (donné en paramètre). Nous commençons avec une solutions nulle et à chaque itération, on utilise le Greedy Randomized Construction. Si cette solution est possible, nous faisons une recherche locale qui renvoie possiblement une meilleure solution et si cette solution est meilleure que notre solution actuelle on remplace notre solution par la nouvelle.
+\end{frame}
+\section{Résultat}
+\begin{frame}
+  \frametitle{Résultat}
+
+  \begin{tabular}{|c|c|c|c|c|}
+  \hline
+  Fichier & Arêtes & Sommets &$ \alpha$ & Modularité \\
+  \hline
+  Fichier 1 & 28 & 16 & 0.5 &0.6071428571428571 \\
+  Fichier 2 & 50 & 20 & 0.5 &0.5480000000000007 \\ 
+  Fichier 3 & 65 & 25 & 0.5 &0.5692307692307693 \\
+  Fichier 4 & 160 & 80 & 0.5 &0.7375 \\
+  Fichier 5 & 613 & 115 & 1 &0.6011419249592123\\
+  \hline
+  
+  \end{tabular}
+\end{frame}
+
+\section{Conclusion}
+\begin{frame}
+	\frametitle{Conclusion}
+	La métaheuristique que nous avons utilisé convient bien au problème et nous donne des résultats satisfaisants.
+\end{frame}
+
+\section{Source}
+\begin{frame}
+\frametitle{Source}
+	\begin{itemize}
+	\item \href{https://sci2s.ugr.es/sites/default/files/files/Teaching/GraduatesCourses/Metaheuristicas/Bibliography/GRASP.pdf}{GREEDY RANDOMIZED ADAPTIVE
+SEARCH PROCEDURES}
+	\item \href{https://www.cc.gatech.edu/dimacs10/papers/[12]-NascimentoandPitsoulis_v3.pdf}{Community Detection by Modularity
+Maximization using GRASP with Path Relinking}
+	\end{itemize}
+\end{frame}
+
+\end{document}
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 
